@@ -9,96 +9,89 @@ public class AI : MonoBehaviour
     public Vector3 newPos;
     public Vector3 origin;
 
+
+
+
     public Vector3 center;
     public float radius;
     private float objectCount;
+    [SerializeField] private float moveTimer;
+    [SerializeField] private float maxMoveTimer;
 
-    List<Objects> objects = new List<Object>();
+    [SerializeField] private Vector3 hitColliderTransform;
 
 
-    // Start is called before the first frame update
+
+
+
     void Start()
     {
+        moveTimer = maxMoveTimer;
+
         origin = transform.position;
         nav = GetComponent<NavMeshAgent>();
-        StartCoroutine(SetDest());
+
 
     }
 
-    // Update is called once per frame
+
     void Update()
     {
+        moveTimer -= Time.deltaTime;
 
-    }
-
-    IEnumerator SetDest()
-    {
-        while (true)
+        if (moveTimer <= 0)
         {
-            yield return new WaitForSeconds(2);
             MoveAI();
         }
     }
+
     void MoveAI()
     {
-        NewSearchPosition();
-        NewMovePosition();
+        nav.SetDestination(NewPosition());
 
-        nav.SetDestination(origin += NewMovePosition());
+        objectCount = 0;
+        moveTimer = maxMoveTimer;
         Debug.Log("Move");
-        origin += NewMovePosition();
     }
 
-    //gaining position to move it
-    public Vector3 NewMovePosition()
-    {
-        SearchForObject();
 
-        Vector3 tempNewPosSphere = (NewSearchPosition() + Random.insideUnitSphere) * 1;
-        Vector3 newPos = new Vector3(tempNewPosSphere.x, 0, tempNewPosSphere.z);
-        return newPos;
-    }
-
-    //creating sphere area to search for new position
-    public Vector3 NewSearchPosition()
-    {
-        Vector3 TempSphere = Random.insideUnitSphere * 2;
-        Vector3 newSphere = new Vector3(TempSphere.x, 0, TempSphere.z);
-        return newSphere += TempSphere;
-    }
 
     //Searching for object
-    void Vector3 SearchForObject()
+    Vector3 NewPosition()
     {
-        center = NewSearchPosition();
-        radius = 1;
+        center = transform.position;
         Collider[] hitColliders = Physics.OverlapSphere(center, radius);
+        List<Item> items = new List<Item>();
 
         for (int i = 0; i < hitColliders.Length; i++)
         {
-            if (hitColliders[i].tag == "Object")
+            if (hitColliders[i].gameObject.tag == "Item")
             {
+                items.Add(new Item(hitColliders[i].transform.position));
+                hitColliderTransform = (hitColliders[i].transform.position);
                 objectCount++;
-                Debug.Log("Object" + objectCount);
-                objects.Add(new Objects(hitColliders[i].transform));
-                //objectCollider.Add(hitColliders[i].transform);
+            }
 
-            }
-            else
-            {
-                Debug.Log("not Object");
-            }
-            foreach (Collider hitCollider in hitColliders)
-            {
-
-            }
-            if (i == hitColliders.Length)
-            {
-
-            }
         }
-        objectCount = 0;
-        var Dest = Random.Range(1, objects.Count);
-        return objects
+        var Dest = Random.Range(0, items.Count);
+        if (hitColliders[Dest].gameObject.tag == "Item")
+        {
+            Debug.Log(hitColliders[Dest].gameObject.tag);
+            Debug.Log("Found Item");
+            return hitColliders[Dest].gameObject.transform.position;
+        }
+        else
+        {
+            Debug.Log("No Item Found");
+            return new Vector3(Random.insideUnitSphere.x * (radius / 2), 0, Random.insideUnitSphere.z * (radius / 2));
+        }
+
+
     }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, radius);
+    }
+
 }

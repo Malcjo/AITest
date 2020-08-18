@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Objects
+public class Item
 {
-    public int count;
-    public Transform localTransform;
+    public int ID;
+    public Vector3 localTransform;
     // Start is called before the first frame update
 
-    public Objects(Transform newLocalTransform)
+    public Item(Vector3 newLocalTransform)
     {
         //count = newCount;
+        
         localTransform = newLocalTransform;
     }
 }
