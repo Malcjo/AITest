@@ -11,7 +11,6 @@ public class Item
 
     public Item(Vector3 newLocalTransform)
     {
-        //count = newCount;
         
         localTransform = newLocalTransform;
     }
