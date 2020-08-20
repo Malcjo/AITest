@@ -14,6 +14,10 @@ public class PreyAI : MonoBehaviour
     public float maxHunger;
     public bool correctItem;
 
+    public int randWait;
+
+    public int dest;
+
     public GameObject Dest;
     public int numberOfDest;
     public bool move;
@@ -33,7 +37,6 @@ public class PreyAI : MonoBehaviour
         numberOfDest = 0;
         hunger = maxHunger;
         itemLayer = 1 << 8;
-        moveTimer = maxMoveTimer;
         move = true;
 
     }
@@ -42,18 +45,11 @@ public class PreyAI : MonoBehaviour
     void Update()
     {
         hunger -= (1 * Time.deltaTime);
-        moveTimer -= Time.deltaTime;
-
-        if(move == true)
+        if (move == true)
         {
             MoveAI();
         }
-        /*if (moveTimer <= 0)
-        {
 
-            MoveAI();
-            moveTimer = maxMoveTimer;
-        }*/
     }
 
     void MoveAI()
@@ -75,24 +71,29 @@ public class PreyAI : MonoBehaviour
         Debug.Log(hitColliders.Length);
         for (int i = 0; i < hitColliders.Length; i++)
         {
-            items.Add(new Item(hitColliders[i].transform.position));
-
+            if(hitColliders[i].tag == "Item")
+            {
+                items.Add(new Item(hitColliders[i].transform.position, 1));
+            }
+            else
+            {
+                items.Add(new Item(hitColliders[i].transform.position, 0));
+            }
         }
+
         if (items.Count == 0)
         {
             Debug.Log("Nothing Found!");
 
             if (numberOfDest < 1)
             {
-                Vector3 newDest = new Vector3(Random.insideUnitSphere.x * radius, 0, Random.insideUnitSphere.z * radius);
+                Vector3 newDest = new Vector3(Random.insideUnitSphere.x * (radius * 1.25f), 0, Random.insideUnitSphere.z * (radius * 1.25f));
                 Instantiate(Dest, newDest, Quaternion.identity);
 
                 numberOfDest++;
                 return newDest;
-            }
-            else
-            {
-                
+
+
             }
 
             var tempDest = GameObject.FindGameObjectWithTag("Dest");
@@ -101,18 +102,20 @@ public class PreyAI : MonoBehaviour
         else
         {
             Debug.Log("Item Found!");
-            var Dest = Random.Range(0, items.Count);
-            if (hitColliders[Dest].gameObject.tag == "Item")
+            
+
+            dest = Random.Range(0, items.Count);
+            if (hitColliders[dest].gameObject.tag == "Item")
             {
                 correctItem = true;
-                move = true;
+
             }
             else 
             { 
                 correctItem = false;
-                move = true;
+
             }
-            return hitColliders[Dest].gameObject.transform.position;
+            return hitColliders[dest].gameObject.transform.position;
         }
 
 
@@ -131,13 +134,14 @@ public class PreyAI : MonoBehaviour
 
         if (correctItem == true)
         {
-            
+            move = true;
             hunger += 10;
             Destroy(other.gameObject);
             Debug.Log("Correct Item!");
         }
         else if(correctItem == false)
         {
+            move = true;
             Destroy(other.gameObject);
             Debug.Log("Wrong Item!");
         }
