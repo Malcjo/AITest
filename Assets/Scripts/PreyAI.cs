@@ -88,6 +88,7 @@ public class PreyAI : MonoBehaviour
             if (numberOfDest < 1)
             {
                 Vector3 newDest = new Vector3(Random.insideUnitSphere.x * (radius * 1.25f), 0, Random.insideUnitSphere.z * (radius * 1.25f));
+                if(Physics.Raycast(transform.position, newDest, out hit,))
                 Instantiate(Dest, newDest, Quaternion.identity);
 
                 numberOfDest++;
@@ -126,6 +127,8 @@ public class PreyAI : MonoBehaviour
     {
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position, radius);
+
+        Debug.DrawLine(transform.position, newPos, Color.red);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -133,7 +136,7 @@ public class PreyAI : MonoBehaviour
         ItemPos = other.gameObject.transform.position;
 
         if (correctItem == true)
-        {
+        {   
             move = true;
             hunger += 10;
             Destroy(other.gameObject);
