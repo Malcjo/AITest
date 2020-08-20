@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class PreyAI : MonoBehaviour
 {
@@ -9,8 +10,13 @@ public class PreyAI : MonoBehaviour
     public Vector3 newPos;
     public Vector3 ItemPos;
     public Vector3 origin;
-
+    public float hunger;
+    public float maxHunger;
     public bool correctItem;
+
+    public GameObject Dest;
+    public int numberOfDest;
+    public bool move;
 
     public Vector3 center;
     public float radius;
@@ -23,30 +29,37 @@ public class PreyAI : MonoBehaviour
 
     void Start()
     {
+        nav = GetComponent<NavMeshAgent>();
+        numberOfDest = 0;
+        hunger = maxHunger;
         itemLayer = 1 << 8;
         moveTimer = maxMoveTimer;
-
-        nav = GetComponent<NavMeshAgent>();
-
+        move = true;
 
     }
 
 
     void Update()
     {
+        hunger -= (1 * Time.deltaTime);
         moveTimer -= Time.deltaTime;
 
-        if (moveTimer <= 0)
+        if(move == true)
         {
             MoveAI();
-            moveTimer = maxMoveTimer;
         }
+        /*if (moveTimer <= 0)
+        {
+
+            MoveAI();
+            moveTimer = maxMoveTimer;
+        }*/
     }
 
     void MoveAI()
     {
         nav.SetDestination(NewPosition());
-
+        move = false;
         newPos = NewPosition();
     }
 
@@ -68,7 +81,22 @@ public class PreyAI : MonoBehaviour
         if (items.Count == 0)
         {
             Debug.Log("Nothing Found!");
-            return new Vector3(Random.insideUnitSphere.x * radius, 0, Random.insideUnitSphere.z * radius);
+
+            if (numberOfDest < 1)
+            {
+                Vector3 newDest = new Vector3(Random.insideUnitSphere.x * radius, 0, Random.insideUnitSphere.z * radius);
+                Instantiate(Dest, newDest, Quaternion.identity);
+
+                numberOfDest++;
+                return newDest;
+            }
+            else
+            {
+                
+            }
+
+            var tempDest = GameObject.FindGameObjectWithTag("Dest");
+            return tempDest.gameObject.transform.position;
         }
         else
         {
@@ -77,8 +105,13 @@ public class PreyAI : MonoBehaviour
             if (hitColliders[Dest].gameObject.tag == "Item")
             {
                 correctItem = true;
+                move = true;
             }
-            else { correctItem = false; }
+            else 
+            { 
+                correctItem = false;
+                move = true;
+            }
             return hitColliders[Dest].gameObject.transform.position;
         }
 
@@ -95,9 +128,11 @@ public class PreyAI : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         ItemPos = other.gameObject.transform.position;
-        
+
         if (correctItem == true)
         {
+            
+            hunger += 10;
             Destroy(other.gameObject);
             Debug.Log("Correct Item!");
         }
@@ -105,6 +140,14 @@ public class PreyAI : MonoBehaviour
         {
             Destroy(other.gameObject);
             Debug.Log("Wrong Item!");
+        }
+        if (other.tag == "Dest")
+        {
+            move = true;
+            Destroy(other.gameObject);
+            numberOfDest--;
+            moveTimer = maxMoveTimer;
+
         }
     }
 
